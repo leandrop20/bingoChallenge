@@ -39,6 +39,11 @@
 				}
 			}
 		}
+		
+		public function reset():void {
+			removeChildren();
+			balls.splice(0, balls.length);
+		}
 
 	}
 	

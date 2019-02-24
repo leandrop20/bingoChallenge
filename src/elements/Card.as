@@ -4,6 +4,8 @@
 	import flash.geom.Point;
 	import flash.events.MouseEvent;
 	import flash.text.TextField;
+	import screens.Game;
+	import enums.GameType;
 	
 	public class Card extends Sprite {
 		
@@ -45,7 +47,9 @@
 						tf.y = POSITION_INIT.y + ((tf.height + SPACE) * j);
 						tf.mark.visible = false;
 						addChild(tf);
-						tfs[i][j] = tf;
+						tfs[i][tfs[i].length] = tf;
+					} else {
+						tfs[i][tfs[i].length] = null;
 					}
 				}
 			}
@@ -83,25 +87,73 @@
 		}
 		
 		private function checkBingo():void {
-			var verticalsNeed:int;
+			var markeds:int = 0;
 			var verticalsMarked:int;
+			var horizontalsMarked:int;
+			var diagonalLMarked:int = 0;
+			var diagonalRMarked:int = 0;
+			
 			for (var i:int = 0; i < SIZE.x; i++) {
-				verticalsNeed = tfs[i].length;
 				verticalsMarked = 0;
-				
+				horizontalsMarked = 0;
 				for (var j:int = 0; j < SIZE.y; j++) {
-					if (!(i === 2 && j === 2)) {
+					if (i == 2 && j == 2) {
+						verticalsMarked++;
+						horizontalsMarked++;
+					} else {
 						if (tfs[i][j].mark.visible) {
 							verticalsMarked++;
+						}
+						
+						if (tfs[j][i].mark.visible) {
+							horizontalsMarked++;
+						}
+						
+						if (tfs[i][j].mark.visible) {
+							markeds++;
 						}
 					}
 				}
 				
-				if (verticalsNeed === verticalsMarked) {//VERTICAL BINGO
-					callBingo();
-					trace("BINGO VERTICAL");
-					break;
+				if (i == 2) {
+					diagonalLMarked++;
+					diagonalRMarked++;
+					markeds++;
+				} else {
+					if (tfs[i][i].mark.visible) {
+						diagonalLMarked++;
+					}
+					
+					if (tfs[i][SIZE.x - i - 1].mark.visible) {
+						diagonalRMarked++;
+					}
 				}
+				
+				if (Game.checkType == GameType.PARTIAL) {
+					if (verticalsMarked == SIZE.y) {//BINGO VERTICAL
+						callBingo();
+						break;
+					}
+					
+					if (horizontalsMarked == SIZE.x) {//BINGO HORIZONTAL
+						callBingo();
+						break;
+					}
+				}
+			}
+			
+			if (Game.checkType == GameType.PARTIAL) {
+				if (diagonalLMarked == SIZE.x) {//BINGO DIAGONAL LEFT
+					callBingo();
+				}
+				
+				if (diagonalRMarked == SIZE.x) {//BINGO DIAGONAL RIGHT
+					callBingo();
+				}
+			}
+			
+			if (markeds == Math.pow(SIZE.x, 2)) {//BINGO FULL
+				callBingo();
 			}
 		}
 		
@@ -110,8 +162,12 @@
 		}
 		
 		public function reset():void {
+			for (var i:int = numChildren - 1; i > -1; i--) {
+				if (getChildAt(i) is Tf) {
+					removeChildAt(i);
+				}
+			}
 			tfs = [];
-			removeChildren();
 		}
 
 	}

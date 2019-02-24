@@ -5,14 +5,21 @@
 	import flash.utils.Timer;
 	import flash.events.TimerEvent;
 	import elements.Hud;
+	import enums.GameType;
+	import flash.events.MouseEvent;
 	
 	public class Game extends Sprite {
-
-		private const TIME_TO_RAFFLE:int = 1000;
+		
+		public static var checkType:GameType = GameType.PARTIAL;
+		
+		private const TIME_TO_RAFFLE:int = 4000;
 		private const TOTAL_BALLS:int = 75;
 			
 		private var card:Card;
 		private var hud:Hud;
+		private var btStart:BtStart;
+		private var btRestart:BtRestart;
+		private var bingoPopup:Bingo;
 		private var timer:Timer;
 		
 		private var availableBalls:Vector.<int>;
@@ -37,18 +44,58 @@
 			raffledBalls = new Vector.<int>();
 			
 			card.create();
-			start();
+			createBtStart();
 		}
 		
-		private function start():void {
+		private function createBtStart():void {
+			btStart = new BtStart();
+			btStart.x = Main.SIZE.x * 0.5;
+			btStart.y = Main.SIZE.y * 0.5;
+			addChild(btStart);
+			btStart.addEventListener(MouseEvent.CLICK, onStart);
+		}
+		
+		private function removeBtStart():void {
+			if (btStart) {
+				btStart.removeEventListener(MouseEvent.CLICK, onStart);
+				removeChild(btStart);
+				btStart = null;
+			}
+		}
+		
+		private function createBtRestart():void {
+			btRestart = new BtRestart();
+			btRestart.x = Main.SIZE.x * 0.5;
+			btRestart.y = 680;
+			addChild(btRestart);
+			btRestart.addEventListener(MouseEvent.CLICK, onRestart);
+		}
+		
+		private function removeBtRestart():void {
+			if (btRestart) {
+				btRestart.removeEventListener(MouseEvent.CLICK, onRestart);
+				removeChild(btRestart);
+				btRestart = null;
+			}
+		}
+		
+		private function onStart(e):void {
+			removeBtStart();
 			card.events(TypeEvent.ADD);
 			timer.start();
 		}
 		
-		private function reset():void {
+		private function onRestart(e):void {
+			removeBtRestart();
+			hud.reset();
+			
 			card.reset();
 			raffledBalls.splice(0, raffledBalls.length);
 			availableBalls.splice(0, availableBalls.length);
+			removeChild(bingoPopup);
+			
+			card.create();
+			onStart(null);
 		}
 		
 		private function raffle(e:TimerEvent):void {
@@ -75,6 +122,13 @@
 		public function callBingo():void  {
 			timer.stop();
 			card.events(TypeEvent.REMOVE);
+			
+			bingoPopup = new Bingo();
+			bingoPopup.x = Main.SIZE.x * 0.5;
+			bingoPopup.y = Main.SIZE.y * 0.5;
+			addChild(bingoPopup);
+			
+			createBtRestart();
 		}
 
 	}
