@@ -10,7 +10,9 @@
 	public class Card extends Sprite {
 		
 		private var checkNumber:Function;
-		private var callBingo:Function;
+		private var callbackBingo:Function;
+		
+		private var bingoPopup:Bingo;
 		
 		private const SIZE:Point = new Point(5, 5);
 		private const POSITION_INIT:Point = new Point(-164, -138);
@@ -19,9 +21,9 @@
 		
 		private var tfs:Array;
 
-		public function Card(_checkNumber:Function, _callBingo) {
+		public function Card(_checkNumber:Function, _callbackBingo:Function) {
 			checkNumber = _checkNumber;
-			callBingo = _callBingo
+			callbackBingo = _callbackBingo;
 			
 			tfs = [];
 			
@@ -79,9 +81,23 @@
 		
 		private function onClick(e:MouseEvent):void {
 			if (e.target is TextField) {
-				if (checkNumber(int(e.target.text))) {
-					e.target.parent.mark.visible = true;
-					checkBingo();
+				checkAndMark(TextField(e.target));
+			}
+		}
+		
+		private function checkAndMark(tf:TextField):void {
+			if (checkNumber(int(tf.text))) {
+				Tf(tf.parent).mark.visible = true;
+				checkBingo();
+			}
+		}
+		
+		public function autoCheck():void {
+			for (var i:int = 0; i < SIZE.x; i++) {
+				for (var j:int = 0; j < SIZE.y; j++) {
+					if (!(i == 2 && j == 2)) {
+						checkAndMark(tfs[i][j].tf);
+					}
 				}
 			}
 		}
@@ -131,12 +147,12 @@
 				
 				if (Game.checkType == GameType.PARTIAL) {
 					if (verticalsMarked == SIZE.y) {//BINGO VERTICAL
-						callBingo();
+						showBingo();
 						break;
 					}
 					
 					if (horizontalsMarked == SIZE.x) {//BINGO HORIZONTAL
-						callBingo();
+						showBingo();
 						break;
 					}
 				}
@@ -144,17 +160,26 @@
 			
 			if (Game.checkType == GameType.PARTIAL) {
 				if (diagonalLMarked == SIZE.x) {//BINGO DIAGONAL LEFT
-					callBingo();
+					showBingo();
 				}
 				
 				if (diagonalRMarked == SIZE.x) {//BINGO DIAGONAL RIGHT
-					callBingo();
+					showBingo();
 				}
 			}
 			
 			if (markeds == Math.pow(SIZE.x, 2)) {//BINGO FULL
-				callBingo();
+				showBingo();
 			}
+		}
+		
+		public function showBingo():void {
+			bingoPopup = new Bingo();
+			bingoPopup.x = width * 0.5;
+			bingoPopup.y = (height * 0.5) - 100;
+			addChild(bingoPopup);
+			
+			callbackBingo();
 		}
 		
 		public function events(_type:TypeEvent):void {
@@ -164,6 +189,10 @@
 		public function reset():void {
 			for (var i:int = numChildren - 1; i > -1; i--) {
 				if (getChildAt(i) is Tf) {
+					removeChildAt(i);
+				}
+				
+				if (getChildAt(i) is Bingo) {
 					removeChildAt(i);
 				}
 			}

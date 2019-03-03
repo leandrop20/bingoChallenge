@@ -7,14 +7,16 @@
 	import elements.Hud;
 	import enums.GameType;
 	import flash.events.MouseEvent;
+	import managers.CpuManager;
 	
 	public class Game extends Sprite {
 		
 		public static var checkType:GameType = GameType.PARTIAL;
 		
-		private const TIME_TO_RAFFLE:int = 4000;
+		private const TIME_TO_RAFFLE:int = 3000;
 		private const TOTAL_BALLS:int = 75;
 			
+		private var cpu:CpuManager;
 		private var card:Card;
 		private var hud:Hud;
 		private var btStart:BtStart;
@@ -31,8 +33,11 @@
 			bg.y = Main.SIZE.y * 0.5;
 			addChild(bg);
 			
-			card = new Card(checkNumber, callBingo);
+			card = new Card(checkNumber, endGame);
 			addChild(card);
+			
+			cpu = new CpuManager(checkNumber, endGame);
+			addChild(cpu);
 			
 			hud = new Hud();
 			addChild(hud);
@@ -43,6 +48,7 @@
 			availableBalls = new Vector.<int>();
 			raffledBalls = new Vector.<int>();
 			
+			cpu.create();
 			card.create();
 			createBtStart();
 		}
@@ -66,7 +72,7 @@
 		private function createBtRestart():void {
 			btRestart = new BtRestart();
 			btRestart.x = Main.SIZE.x * 0.5;
-			btRestart.y = 680;
+			btRestart.y = (Main.SIZE.y * 0.5) + 150;
 			addChild(btRestart);
 			btRestart.addEventListener(MouseEvent.CLICK, onRestart);
 		}
@@ -108,6 +114,8 @@
 			raffledBalls.push(availableBalls[rand]);
 			hud.showBall(raffledBalls[raffledBalls.length - 1]);
 			availableBalls.splice(rand, 1);
+			
+			cpu.checkAndMark();
 		}
 		
 		public function checkNumber(number:int):Boolean {
@@ -119,14 +127,9 @@
 			return false;
 		}
 		
-		public function callBingo():void  {
+		public function endGame():void  {
 			timer.stop();
 			card.events(TypeEvent.REMOVE);
-			
-			bingoPopup = new Bingo();
-			bingoPopup.x = Main.SIZE.x * 0.5;
-			bingoPopup.y = Main.SIZE.y * 0.5;
-			addChild(bingoPopup);
 			
 			createBtRestart();
 		}
